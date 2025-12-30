@@ -1,9 +1,82 @@
 # Paladin
 
-**Paladin** is an agentic AI framework for autonomous, long-horizon penetration testing. It is designed to perform continuous reconnaissance, vulnerability discovery, exploitation, and triage across complex, real-world environments using structured reasoning, recursive task decomposition, and multi-agent coordination.
+**Paladin** is a reasoning-driven command execution assistant designed to bridge
+natural language intent and controlled system interaction.
 
-Paladin is a *reasoning-first* offensive security system. Rather than relying on brittle, single-loop agents, it integrates multi-agent supervision, explicit reasoning pipelines, memory management, and plan correction to operate at enterprise scale.
+At its core, Paladin translates user requests into **explicit, auditable shell
+commands**, executes them in a constrained environment, and presents the results
+in a structured, human-readable form. The system is intentionally synchronous,
+transparent, and deterministic by default.
 
-The project is inspired by recent research demonstrating that properly scaffolded AI agents can rival—and in some cases outperform—human penetration testers in live production environments.
+Paladin prioritizes:
+- Explicit intent over autonomy
+- Safety boundaries over unrestricted execution
+- Clear separation between reasoning, execution, and presentation
+
+It is built as a backend-first system intended to be paired with a Web UI or CLI,
+but it does **not** manage sessions, memory, or user identity on its own.
 
 ---
+
+## Execution Model
+
+Paladin follows a simple, linear pipeline:
+
+```
+
+User Input → Planner → Executor → Presenter
+
+````
+
+- **Planner**: Interprets the user request and derives a single command
+- **Executor**: Executes the command under configured safety constraints
+- **Presenter**: Formats and summarizes the output for user consumption
+
+No background agents, hidden loops, or autonomous retries are performed.
+
+---
+
+## Execution Modes
+
+Paladin supports two execution modes:
+
+### Stable Mode (Default)
+- Executes only known, whitelisted commands
+- Intended for web exposure and shared environments
+- Prevents arbitrary command execution
+
+### Experimental Mode (Beta)
+- Allows unrestricted shell command execution
+- Intended for local experimentation only
+- Disabled by default
+
+⚠️ Experimental mode is **unsafe for untrusted input**.
+
+---
+
+## What Paladin Is Not
+
+Paladin is **not**:
+- A general-purpose shell replacement
+- An autonomous agent
+- A penetration testing framework
+- A background daemon
+- A self-improving system
+
+Every action is derived from **explicit user input** and executed synchronously.
+
+---
+
+## Configuration
+
+Copy the example configuration and edit as needed:
+
+```bash
+cp config.example.toml config.toml
+````
+
+Configuration controls:
+
+* Model provider and parameters
+* Execution timeouts
+* Safety mode selection
