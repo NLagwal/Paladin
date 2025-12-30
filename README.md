@@ -67,16 +67,39 @@ Every action is derived from **explicit user input** and executed synchronously.
 
 ---
 
-## Configuration
+## Setup and Configuration
+
+Requirements: Python 3.11+
+
+Create and activate a virtual environment:
+
+python -m venv venv
+source venv/bin/activate
+
+Install dependencies:
+
+pip install -r requirements.txt
 
 Copy the example configuration and edit as needed:
 
-```bash
 cp config.example.toml config.toml
-````
 
 Configuration controls:
 
-* Model provider and parameters
-* Execution timeouts
-* Safety mode selection
+- LLM provider and model parameters  
+- Command execution timeout  
+- Safety mode  
+  - stable — allowlisted commands only  
+  - experimental — unrestricted command execution (beta)
+
+## Running Paladin
+
+CLI mode:
+
+python cli.py
+
+Server mode (for WebUI integration):
+
+uvicorn server:app --host 0.0.0.0 --port 8000
+
+Warning: Paladin executes real system commands. Do not expose the server to untrusted networks.
