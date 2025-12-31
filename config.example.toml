@@ -1,5 +1,0 @@
-provider = "ollama"
-model = "ministral-3:3b"
-temperature = 0.2 #bw 0 to 1
-timeout_seconds = 15
-mode = "stable" #stable or experimental
