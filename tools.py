@@ -32,14 +32,10 @@ STABLE_ALLOWLIST = {
 
     # processes (read-only)
     "ps",
-    "top",
-    "htop",
 
     # networking (read-only)
     "ip",
     "ss",
-    "ping",
-    "nmcli",
     "iw",
 
     # files (non-destructive)

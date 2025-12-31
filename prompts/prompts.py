@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).parent
 def load_prompt(filename: str) -> ChatPromptTemplate:
     text = (BASE_DIR / filename).read_text()
     return ChatPromptTemplate.from_messages([
-        ("system", text)
+        ("human", text)
     ])
 
 
