@@ -1,9 +1,14 @@
 # Dependencies
 node_modules/
 vendor/
+__pycache__/
+*.py[cod]
+*.so
+venv/
 
 # Environment variables
 .env
+.env.*
 
 # Build outputs
 build/
@@ -30,3 +35,9 @@ npm-debug.log*
 
 # Docker
 .docker/
+
+# Config
+config.toml
+
+# Docs
+docs
