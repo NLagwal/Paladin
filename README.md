@@ -107,17 +107,6 @@ graph LR
 - [ ] Improve error handling and recovery strategies.
 - [ ] Add unit and integration tests.
 
-## 📚 References
-
-Built with open-source technologies:
-
-- [LangGraph](https://langchain-ai.github.io/langgraph/) - Orchestration and state management.
-- [LangChain](https://www.langchain.com/) - LLM interaction framework.
-- [Ollama](https://ollama.com/) - Local LLM runtime.
-- [Typer](https://typer.tiangolo.com/) - CLI app building.
-- [Rich](https://rich.readthedocs.io/) - Terminal formatting.
-- [FastAPI](https://fastapi.tiangolo.com/) - Modern web framework for APIs.
-
 ---
 
 *Disclaimer: Paladin is a tool for executing commands. Always review the commands generated before execution, especially in Experimental mode.*
