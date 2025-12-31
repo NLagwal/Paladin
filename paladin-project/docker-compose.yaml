@@ -1,0 +1,386 @@
+services:
+  ai_service:
+    build:
+      context: ./ai
+      dockerfile: Dockerfile
+    container_name: paladin_ai_service
+    ports:
+      - "8080:8000"
+    volumes:
+      - ./ai:/app
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - ollama
+    networks:
+      - paladin_network
+    command: sh -c "cp -n config.example.toml config.toml && uvicorn server:app --host 0.0.0.0 --port 8000"
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+  ollama:
+    image: ollama/ollama
+    container_name: paladin_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - paladin_network
+    restart: on-failure
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: paladin_frontend
+    ports:
+      - "3000:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+      - API_GATEWAY_URL=http://api_gateway:5000
+    networks:
+      - paladin_network
+    # Temporarily remove depends_on for initial test
+    # depends_on:
+    #   api_gateway:
+    #     condition: service_healthy
+    command: sh -c "npm install && npm run dev -- --host --port 5173"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: on-failure
+
+  api_gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: paladin_api_gateway
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./api-gateway:/app
+    environment:
+      - NODE_ENV=development
+      # - COMPONENT_SERVICE_URL=http://component_service:8001
+      # - HACKATHON_SERVICE_URL=http://hackathon_service:8002
+      # - FACULTY_SERVICE_URL=http://faculty_service:8003
+      - AUTH_SERVICE_URL=http://auth_service:8004
+      - NOTIFICATION_SERVICE_URL=http://notification_service:8005
+      - AI_SERVICE_URL=http://ai_service:8000
+    networks:
+      - paladin_network
+    depends_on:
+      ai_service:
+        condition: service_healthy
+    command: sh -c "echo '[API Gateway] Starting...' && npm install -g nodemon && npm run dev"
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # component_service:
+  #   build:
+  #     context: ./services/component-service
+  #     dockerfile: Dockerfile
+  #   container_name: paladin_component_service
+  #   ports:
+  #     - "8001:8001"
+  #   environment:
+  #     - PORT=8001
+  #     - DB_HOST=postgres
+  #     - DB_PORT=5432
+  #     - DB_USER=labuser
+  #     - DB_PASSWORD=labpassword
+  #     - DB_NAME=labdb
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - ELASTICSEARCH_URL=http://elasticsearch:9200
+  #     - MINIO_ENDPOINT=minio:9000
+  #     - MINIO_ACCESS_KEY=minioadmin
+  #     - MINIO_SECRET_KEY=minioadmin
+  #   networks:
+  #     - paladin_network
+  #   # Temporarily remove depends_on
+  #   command: sh -c "echo '[Component Service] Starting on port $$PORT...' && ./main -v"
+  #   restart: on-failure
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 5
+  #     start_period: 90s  # Give extra time
+
+  # hackathon_service:
+  #   build:
+  #     context: ./services/hackathon-service
+  #     dockerfile: Dockerfile
+  #   container_name: paladin_hackathon_service
+  #   ports:
+  #     - "8002:8002"
+  #   environment:
+  #     - PORT=8002
+  #     - DB_HOST=postgres
+  #     - DB_PORT=5432
+  #     - DB_USER=labuser
+  #     - DB_PASSWORD=labpassword
+  #     - DB_NAME=labdb
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - REDIS_QUEUE_HOST=redis_queue
+  #     - REDIS_QUEUE_PORT=6379
+  #     - ELASTICSEARCH_URL=http://elasticsearch:9200
+  #     - MINIO_ENDPOINT=minio:9000
+  #     - MINIO_ACCESS_KEY=minioadmin
+  #     - MINIO_SECRET_KEY=minioadmin
+  #   networks:
+  #     - paladin_network
+  #   command: sh -c "echo '[Hackathon Service] Starting...' && ./main"
+  #   restart: on-failure
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 90s
+
+  # faculty_service:
+  #   build:
+  #     context: ./services/faculty-service
+  #     dockerfile: Dockerfile
+  #   container_name: paladin_faculty_service
+  #   ports:
+  #     - "8003:8003"
+  #   environment:
+  #     - PORT=8003
+  #     - DB_HOST=postgres
+  #     - DB_PORT=5432
+  #     - DB_USER=labuser
+  #     - DB_PASSWORD=labpassword
+  #     - DB_NAME=labdb
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - MINIO_ENDPOINT=minio:9000
+  #     - MINIO_ACCESS_KEY=minioadmin
+  #     - MINIO_SECRET_KEY=minioadmin
+  #   networks:
+  #     - paladin_network
+  #   command: sh -c "echo '[Faculty Service] Starting...' && ./main"
+  #   restart: on-failure
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 90s
+
+  auth_service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: paladin_auth_service
+    ports:
+      - "8004:8004"
+    environment:
+      - PORT=8004
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=paladin_user
+      - DB_PASSWORD=paladin
+      - DB_NAME=paladin
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=your_super_secret_jwt_key_change_in_production
+      - JWT_EXPIRY=24h
+    networks:
+      - paladin_network
+    command: sh -c "echo '[Auth Service] Starting...' && npm install && npm run dev"
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+
+  notification_service:
+    build:
+      context: ./services/notification-service
+      dockerfile: Dockerfile
+    container_name: paladin_notification_service
+    ports:
+      - "8005:8005"
+    environment:
+      - PORT=8005
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_QUEUE_HOST=redis_queue
+      - REDIS_QUEUE_PORT=6379
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=your_email@gmail.com
+      - SMTP_PASS=your_app_password
+    networks:
+      - paladin_network
+    command: sh -c "echo '[Notification Service] Starting...' && ./main"
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8005/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: paladin_postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=paladin_user
+      - POSTGRES_PASSWORD=paladin
+      - POSTGRES_DB=paladin
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - paladin_network
+    command: postgres -c log_statement=all
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U paladin_user -d paladin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: paladin_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - paladin_network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  redis_queue:
+    image: redis:7-alpine
+    container_name: paladin_redis_queue
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_queue_data:/data
+    networks:
+      - paladin_network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: paladin_elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - paladin_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: paladin_minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    networks:
+      - paladin_network
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: paladin_pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@lab.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - paladin_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  redis_commander:
+    image: rediscommander/redis-commander:latest
+    container_name: paladin_redis_commander
+    ports:
+      - "8081:8081"
+    environment:
+      - REDIS_HOSTS=local:redis:6379,queue:redis_queue:6379
+    networks:
+      - paladin_network
+    depends_on:
+      redis:
+        condition: service_healthy
+      redis_queue:
+        condition: service_healthy
+
+networks:
+  paladin_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  redis_queue_data:
+  elasticsearch_data:
+  minio_data:
+  pgadmin_data:
+  ollama_data:
