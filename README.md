@@ -107,9 +107,9 @@ uvicorn server:app --host 0.0.0.0 --port 8000
 Warning: Paladin executes real system commands. Do not expose the server to untrusted networks.
 
 #### GUI mode:
-
+```
 docker-compose build --no-cache
 docker-compose up
 docker-compose exec ollama ollama run ministral-3:3b 
-
+```
 Then open http://localhost:3000/ on your prefered browser
