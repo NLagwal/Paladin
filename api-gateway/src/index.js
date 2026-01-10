@@ -4,9 +4,24 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 
+const { register, handleFrontendMetric } = require('./metrics');
+
 const routes = require('./routes');
 
 const app = express();
+
+// Handle incoming metrics from the frontend
+app.post('/api/metrics', handleFrontendMetric);
+
+// Expose metrics for Prometheus
+app.get('/metrics', async (req, res) => {
+  try {
+    res.set('Content-Type', register.contentType);
+    res.end(await register.metrics());
+  } catch (ex) {
+    res.status(500).end(ex);
+  }
+});
 
 // CORS configuration - MUST be before other middleware
 // Allow frontend from various ports
