@@ -12,4 +12,4 @@ export async function recordMetric(metric: string, path: string, value?: number)
   } catch (error) {
     console.error('Error recording metric:', error);
   }
-}
+};
