@@ -129,7 +129,7 @@ async fn presenter_node(state: &mut AgentState, llm: &LLMClient) -> anyhow::Resu
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let config_path = "../config.toml";
+    let config_path = "config.toml";
     
     println!("{}", "Loading config...".dimmed());
     let config = match load_config(config_path) {

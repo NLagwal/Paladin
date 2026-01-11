@@ -1,112 +1,44 @@
-# 🛡️ Paladin
+# Paladin-RS 🛡️ (Rust Version)
 
-**Paladin** is a reasoning-driven command execution assistant designed to bridge natural language intent and controlled system interaction.
+A high-performance, memory-efficient rewrite of the Paladin orchestrator in Rust.
 
-> 🚧 **Work In Progress** 🚧
+## 🚀 Features
 
-![Paladin Frontend WIP](assets/wip.png)
+- **Blazing Fast**: Native compilation and minimal runtime overhead.
+- **Memory Efficient**: Uses a fraction of the memory compared to the Python version.
+- **Async Runtime**: Built on `tokio` for non-blocking I/O.
+- **Compatible**: Uses the same `config.toml` and safety mechanisms (Stable/Experimental modes) as the main project.
 
-## 📖 Overview
-
-At its core, Paladin translates user requests into **explicit, auditable shell commands**, executes them in a constrained environment, and presents the results in a structured, human-readable form. The system is intentionally synchronous, transparent, and deterministic by default.
-
-**Paladin Prioritizes:**
-- **Explicit Intent** over autonomy.
-- **Safety Boundaries** over unrestricted execution.
-- **Clear Separation** between reasoning, execution, and presentation.
-
-## ✨ Features
-
-- **Linear Execution Pipeline:** User Input → Planner → Executor → Presenter.
-- **Dual Execution Modes:**
-    - **Stable:** Executes only known, whitelisted commands (Safe).
-    - **Experimental:** Allows unrestricted shell command execution (Beta/Unsafe).
-- **Interface Support:**
-    - **CLI:** Rich, interactive command-line interface.
-    - **API Server:** FastAPI-based backend for web UI integration.
-
-## 🚀 Getting Started
+## 🛠️ Build & Run
 
 ### Prerequisites
-- Python 3.11+
-- [Ollama](https://ollama.com/) (or compatible LLM provider)
+- Rust and Cargo (latest stable)
+- A configured `config.toml` in the project root (one level up).
 
-### Installation
+### Running
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/paladin.git
-    cd paladin
-    ```
-
-2.  **Set up a virtual environment:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```
-
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **Configure the application:**
-    ```bash
-    cp config.example.toml config.toml
-    ```
-    *Edit `config.toml` to set your LLM provider, model, and safety mode.*
-
-## 🛠️ Usage
-
-### CLI Mode
-Run the interactive command-line agent:
 ```bash
-python cli.py
+# Navigate to the rust directory
+cd paladin-rs
+
+# Run in debug mode
+cargo run
+
+# Build for release (optimized)
+cargo build --release
+./target/release/paladin-rs
 ```
-
-### Server Mode
-Start the API server (useful for WebUI integration):
-```bash
-uvicorn server:app --host 0.0.0.0 --port 8000
-```
-*⚠️ Warning: Paladin executes real system commands. Do not expose the server to untrusted networks.*
-
-## ⚙️ Configuration
-
-The `config.toml` file controls the behavior of Paladin:
-
-| Setting | Description | Default |
-| :--- | :--- | :--- |
-| `provider` | The LLM provider (e.g., `ollama`). | `ollama` |
-| `model` | Specific model to use (e.g., `ministral-3:3b`). | `ministral-3:3b` |
-| `temperature` | Creativity of the model (0.0 - 1.0). | `0.2` |
-| `timeout_seconds` | Max duration for command execution. | `15` |
-| `mode` | `stable` (allowlist) or `experimental` (unrestricted). | `stable` |
 
 ## 🏗️ Architecture
 
-Paladin follows a simple, linear pipeline:
+The Rust architecture mirrors the Python logic:
 
-```mermaid
-graph LR
-    A[User Input] --> B[Planner]
-    B --> C[Executor]
-    C --> D[Presenter]
-```
+1.  **Config**: Loads `../config.toml`.
+2.  **Planner**: Uses LLM to check `planner.txt` prompt (hardcoded in this version for performance/portability) and decides on a command.
+3.  **Executor**: Executes the command using strictly controlled process spawning.
+4.  **Presenter**: Formats the output.
 
-- **Planner**: Interprets the user request and derives a single command.
-- **Executor**: Executes the command under configured safety constraints.
-- **Presenter**: Formats and summarizes the output for user consumption.
+## ⚠️ Safety
 
-## 📝 Todo List
-
-- [ ] Implement robust allowlist for Stable mode.
-- [ ] Add Docker support for sandboxed execution.
-- [ ] Develop a full Web UI (Frontend).
-- [ ] Add session history support (optional).
-- [ ] Improve error handling and recovery strategies.
-- [ ] Add unit and integration tests.
-
----
-
-*Disclaimer: Paladin is a tool for executing commands. Always review the commands generated before execution, especially in Experimental mode.*
+- **Stable Mode**: Only allows whitelisted commands (`ls`, `uname`, etc.) defined in `src/tools.rs`.
+- **Experimental Mode**: Allows all commands EXCEPT interactive ones (`vim`, `top`, etc.) to prevent hanging the orchestrator.
