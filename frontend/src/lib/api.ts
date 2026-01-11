@@ -6,12 +6,15 @@ import { activityLog } from '../data/mockData';
 const API_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000/api';
 const IS_DEMO = (import.meta as any).env?.VITE_DEMO_MODE === 'true';
 
-export interface AIStatus {
-    status: 'running' | 'stopped' | 'error';
-    uptime_seconds: number;
-    active_model: string;
-    mode: "stable" | "experimental";
+// Match backend response: { status, mode, model, uptime }
+export interface AiStatus {
+    status: string;
+    uptime: string;
+    model: string;
+    mode: string;
 }
+
+export type AIStatus = AiStatus; // Alias for backward compatibility if needed
 
 export interface Telemetry {
     cpu_usage: number;
@@ -30,12 +33,12 @@ export interface AppConfig {
 }
 
 export const api = {
-    async getStatus(): Promise<AIStatus | null> {
+    async getAiStatus(): Promise<AiStatus> {
         if (IS_DEMO) {
             return {
-                status: 'running',
-                uptime_seconds: 12345,
-                active_model: 'demo-model-v1',
+                status: 'ONLINE',
+                uptime: '1h 23m',
+                model: 'demo-model-v1',
                 mode: 'stable'
             };
         }
@@ -44,11 +47,16 @@ export const api = {
             return response.data;
         } catch (error) {
             console.error('Failed to fetch status:', error);
-            return null;
+            return {
+                status: 'OFFLINE',
+                uptime: '-',
+                model: '-',
+                mode: '-'
+            };
         }
     },
 
-    async getLogs(): Promise<ActivityLog[]> {
+    async getAiLogs(): Promise<ActivityLog[]> {
         if (IS_DEMO) {
             return activityLog;
         }
@@ -125,3 +133,4 @@ export const api = {
         }
     }
 };
+
