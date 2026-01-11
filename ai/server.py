@@ -4,11 +4,30 @@ from pydantic import BaseModel
 from api import run_once
 from config import load_config, save_config, AppConfig
 import datetime
+import requests # Added requests import
 
 # Load config to get mode
 CONFIG = load_config()
 
 app = FastAPI(title="Paladin Server")
+
+@app.get("/ollama/models")
+def get_ollama_models():
+    """Fetches available models from the configured Ollama instance."""
+    # Ensure CONFIG.ollama_base_url is accessible. Assuming it's part of AppConfig.
+    # If not, this might need adjustment based on how CONFIG is structured.
+    base_url = CONFIG.ollama_base_url if hasattr(CONFIG, 'ollama_base_url') and CONFIG.ollama_base_url else "http://localhost:11434"
+    try:
+        # Ollama API: GET /api/tags
+        resp = requests.get(f"{base_url}/api/tags", timeout=5)
+        resp.raise_for_status()
+        data = resp.json()
+        # Extract model names
+        return {"models": [model["name"] for model in data.get("models", [])]}
+    except Exception as e:
+        # Using print for error logging, consistent with existing error handling in the file
+        print(f"Error fetching Ollama models: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch Ollama models: {str(e)}")
 
 # In-memory activity log (for demo purposes, real app would use DB)
 ACTIVITY_LOGS = []

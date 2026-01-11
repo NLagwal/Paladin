@@ -71,6 +71,18 @@ router.get('/status', async (req, res) => {
     }
 });
 
+// Proxy Ollama models endpoint
+router.get('/ollama/models', async (req, res) => {
+    try {
+        const response = await axios.get(`${AI_SERVICE_URL}/ollama/models`);
+        res.json(response.data);
+    } catch (error) {
+        // console.error('Error fetching Ollama models:', error.message);
+        // Return empty list on error instead of 500 to prevent UI crash
+        res.json({ models: [] });
+    }
+});
+
 router.get('/logs', async (req, res) => {
     try {
         const response = await axios.get(`${AI_SERVICE_URL}/logs`, { timeout: 5000 });

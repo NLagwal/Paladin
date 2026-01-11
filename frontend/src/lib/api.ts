@@ -110,5 +110,18 @@ export const api = {
             console.error('Failed to save config:', error);
             return false;
         }
+    },
+
+    async getOllamaModels(): Promise<string[]> {
+        if (IS_DEMO) {
+            return ['llama3:latest', 'mistral:latest', 'gemma:2b', 'demo-model-v1'];
+        }
+        try {
+            const response = await axios.get(`${API_URL}/ai/ollama/models`);
+            return response.data.models || [];
+        } catch (error) {
+            console.error('Failed to fetch Ollama models:', error);
+            return [];
+        }
     }
 };

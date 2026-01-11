@@ -15,10 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 
 export function SettingsModal() {
-    const [open, setOpen] = useState(false);
-    const [config, setConfig] = useState<AppConfig | null>(null);
-    const [loading, setLoading] = useState(false);
-    const { toast } = useToast();
+    const [ollamaModels, setOllamaModels] = useState<string[]>([]);
 
     useEffect(() => {
         if (open) {
@@ -26,11 +23,22 @@ export function SettingsModal() {
         }
     }, [open]);
 
+    useEffect(() => {
+        // Auto-fetch models when provider is ollama
+        if (config?.provider === 'ollama') {
+            api.getOllamaModels().then(setOllamaModels);
+        }
+    }, [config?.provider, config?.ollama_base_url]);
+
     const loadConfig = async () => {
         setLoading(true);
         const data = await api.getConfig();
         if (data) {
             setConfig(data);
+            // Pre-fetch if already set to ollama
+            if (data.provider === 'ollama') {
+                api.getOllamaModels().then(setOllamaModels);
+            }
         } else {
             toast({
                 title: "Error",
@@ -114,47 +122,65 @@ export function SettingsModal() {
 
                         <div className="grid gap-2">
                             <Label htmlFor="model">Model Name</Label>
-                            <Input
-                                id="model"
-                                value={config.model}
-                                onChange={(e) => updateField('model', e.target.value)}
-                            />
+                            {config.provider === 'ollama' && ollamaModels.length > 0 ? (
+                                <Select value={config.model} onValueChange={(v) => updateField('model', v)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a model" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {ollamaModels.map(model => (
+                                            <SelectItem key={model} value={model}>{model}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <Input
+                                    id="model"
+                                    value={config.model}
+                                    onChange={(e) => updateField('model', e.target.value)}
+                                    placeholder={config.provider === 'ollama' ? "Enter model manually (e.g. llama3)" : "gemini-pro"}
+                                />
+                            )}
                         </div>
 
-                        <div className="grid gap-2">
-                            <Label htmlFor="api_key">API Key (Optional)</Label>
-                            <Input
-                                id="api_key"
-                                type="password"
-                                value={config.api_key || ''}
-                                onChange={(e) => updateField('api_key', e.target.value)}
-                                placeholder="Required for cloud providers"
-                            />
-                        </div>
+                        {config.provider !== 'ollama' && (
+                            <>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="api_key">API Key (Optional)</Label>
+                                    <Input
+                                        id="api_key"
+                                        type="password"
+                                        value={config.api_key || ''}
+                                        onChange={(e) => updateField('api_key', e.target.value)}
+                                        placeholder="Required for cloud providers"
+                                    />
+                                </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="temp">Temperature</Label>
-                                <Input
-                                    id="temp"
-                                    type="number"
-                                    step="0.1"
-                                    min="0"
-                                    max="1"
-                                    value={config.temperature}
-                                    onChange={(e) => updateField('temperature', e.target.value)}
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="timeout">Timeout (sec)</Label>
-                                <Input
-                                    id="timeout"
-                                    type="number"
-                                    value={config.timeout_seconds}
-                                    onChange={(e) => updateField('timeout_seconds', e.target.value)}
-                                />
-                            </div>
-                        </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="temp">Temperature</Label>
+                                        <Input
+                                            id="temp"
+                                            type="number"
+                                            step="0.1"
+                                            min="0"
+                                            max="1"
+                                            value={config.temperature}
+                                            onChange={(e) => updateField('temperature', e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="timeout">Timeout (sec)</Label>
+                                        <Input
+                                            id="timeout"
+                                            type="number"
+                                            value={config.timeout_seconds}
+                                            onChange={(e) => updateField('timeout_seconds', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
                         <div className="grid gap-2">
                             <Label htmlFor="mode">Execution Mode</Label>
