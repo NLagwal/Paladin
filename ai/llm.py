@@ -12,7 +12,9 @@ def get_llm() -> BaseChatModel:
     Currently supports Ollama and Gemini.
     """
     cfg = load_config()
-    ollama_base_url = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+    # Prioritize config file, allow env var override if config is default? 
+    # Actually, config file should be source of truth if we are editing it via UI.
+    ollama_base_url = cfg.ollama_base_url or os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
 
     if cfg.provider == "ollama":
         return ChatOllama(

@@ -4,23 +4,19 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 
-const { register, handleFrontendMetric } = require('./metrics');
+// Metrics module missing in bare metal or not needed for MVP
+// const { register, handleFrontendMetric } = require('./metrics');
 
 const routes = require('./routes');
 
 const app = express();
 
 // Handle incoming metrics from the frontend
-app.post('/api/metrics', handleFrontendMetric);
+// app.post('/api/metrics', handleFrontendMetric);
 
 // Expose metrics for Prometheus
 app.get('/metrics', async (req, res) => {
-  try {
-    res.set('Content-Type', register.contentType);
-    res.end(await register.metrics());
-  } catch (ex) {
-    res.status(500).end(ex);
-  }
+  res.status(501).send("Metrics not implemented in this version");
 });
 
 // CORS configuration - MUST be before other middleware
@@ -29,7 +25,7 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [
       'http://localhost:3000',
       'http://localhost:5173',
@@ -38,7 +34,7 @@ app.use(cors({
       'http://127.0.0.1:5173',
       'http://127.0.0.1:5174'
     ];
-    
+
     if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
       callback(null, true);
     } else {

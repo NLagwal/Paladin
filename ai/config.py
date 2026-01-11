@@ -15,6 +15,7 @@ class AppConfig(BaseModel):
         pattern="^(stable|experimental)$",
         description="Execution mode"
     )
+    ollama_base_url: str = Field("http://127.0.0.1:11434", description="Base URL for Ollama")
     allowed_commands: Optional[list[str]] = Field(default_factory=list, description="List of allowed commands in stable mode")
     tools: Optional[list[str]] = Field(default_factory=list, description="List of enabled tools")
 
@@ -44,15 +45,13 @@ def save_config(config: AppConfig, path: str = "config.toml"):
     if config.api_key:
         lines.append(f'api_key = "{config.api_key}"')
     else:
-        # If explicitly None/empty, maybe don't write it or write empty string? 
-        # Better to not write if it's optional and missing, but for editing we might want to keep it.
-        # Let's write empty string if it's None to be safe for editing forms? or skip.
         pass
         
     lines.append(f'model = "{config.model}"')
     lines.append(f'temperature = {config.temperature}')
     lines.append(f'timeout_seconds = {config.timeout_seconds}')
     lines.append(f'mode = "{config.mode}"')
+    lines.append(f'ollama_base_url = "{config.ollama_base_url}"')
     
     def fmt_list(l):
         if not l: return "[]"

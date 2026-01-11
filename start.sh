@@ -45,6 +45,7 @@ npm install
 
 # Set env vars for gateway to find AI service locally
 export AI_SERVICE_URL="http://localhost:8000"
+export OLLAMA_BASE_URL="http://127.0.0.1:11434"
 export PORT=5000
 node src/index.js &
 GATEWAY_PID=$!

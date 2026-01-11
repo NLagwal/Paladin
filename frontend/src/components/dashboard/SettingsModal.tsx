@@ -100,6 +100,18 @@ export function SettingsModal() {
                             </Select>
                         </div>
 
+                        {config.provider === 'ollama' && (
+                            <div className="grid gap-2">
+                                <Label htmlFor="ollama_url">Ollama Base URL</Label>
+                                <Input
+                                    id="ollama_url"
+                                    value={config.ollama_base_url || "http://127.0.0.1:11434"}
+                                    onChange={(e) => updateField('ollama_base_url', e.target.value)}
+                                    placeholder="http://127.0.0.1:11434"
+                                />
+                            </div>
+                        )}
+
                         <div className="grid gap-2">
                             <Label htmlFor="model">Model Name</Label>
                             <Input
