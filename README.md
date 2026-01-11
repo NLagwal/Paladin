@@ -84,7 +84,6 @@ Paladin provides:
 
 ### ���� **Production-Ready**
 - **High Availability**: Multi-region deployment support
-- **Auto-Scaling**: Kubernetes HPA with intelligent triggers
 - **Resilience**: Circuit breakers & graceful degradation
 - **Zero Downtime**: Blue-green deployment strategy
 
@@ -186,7 +185,7 @@ User Output
 
 ### Infrastructure
 - **Docker & Docker Compose** - Containerization
-- **Kubernetes** - Orchestration (production)
+- **netes** - Orchestration (In work)
 - **PostgreSQL 15** - Primary database
 - **Redis 7** - Caching layer
 - **Prometheus** - Metrics collection
@@ -324,7 +323,7 @@ Paladin/
 │   ├── main.go
 │   └── routes/
 │
-├── k8s/                        # Kubernetes manifests
+├── k8s/                        # netes manifests
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── configmap.yaml
@@ -688,7 +687,7 @@ Error Response:
 docker-compose up
 ```
 
-### Kubernetes (Production)
+### Kubernetes (In work)
 ```bash
 kubectl apply -f k8s/
 kubectl set image deployment/paladin paladin=paladin:v0.0.1
@@ -789,7 +788,7 @@ Found a bug? [Create an issue](https://github.com/NLagwal/Paladin/issues) with:
 - 🔄 Multi-user support
 
 ### Q2 2026
-- 📅 Kubernetes-native deployment
+- 📅 Kubernetes-native deployment 
 - 📅 Advanced analytics
 - 📅 Plugin system
 - 📅 Custom model support
