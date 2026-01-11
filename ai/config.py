@@ -36,3 +36,33 @@ def load_config(path: str = "config.toml") -> AppConfig:
         print("Invalid configuration:")
         print(e)
         sys.exit(1)
+
+
+def save_config(config: AppConfig, path: str = "config.toml"):
+    lines = []
+    lines.append(f'provider = "{config.provider}"')
+    if config.api_key:
+        lines.append(f'api_key = "{config.api_key}"')
+    else:
+        # If explicitly None/empty, maybe don't write it or write empty string? 
+        # Better to not write if it's optional and missing, but for editing we might want to keep it.
+        # Let's write empty string if it's None to be safe for editing forms? or skip.
+        pass
+        
+    lines.append(f'model = "{config.model}"')
+    lines.append(f'temperature = {config.temperature}')
+    lines.append(f'timeout_seconds = {config.timeout_seconds}')
+    lines.append(f'mode = "{config.mode}"')
+    
+    def fmt_list(l):
+        if not l: return "[]"
+        return "[" + ", ".join(f'"{x}"' for x in l) + "]"
+
+    if config.allowed_commands is not None:
+         lines.append(f'allowed_commands = {fmt_list(config.allowed_commands)}')
+    
+    if config.tools is not None:
+         lines.append(f'tools = {fmt_list(config.tools)}')
+
+    with open(path, "w") as f:
+        f.write("\n".join(lines) + "\n")

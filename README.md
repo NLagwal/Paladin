@@ -44,17 +44,6 @@ The project is organized into the following components:
 
 ### Method 1: Full-Stack Web App (Recommended)
 
-Run the entire suite (Frontend + AI + Services) using Docker Compose.
-
-```bash
-# Build and start all services
-docker-compose build --no-cache
-docker-compose up
-
-# Make sure you have the model pulled in Ollama (if running via docker-compose ollama service)
-docker-compose exec ollama ollama run ministral-3:3b 
-```
-
 Then open **http://localhost:3000/** in your browser.
 
 ### Method 2: Standalone AI Agent (CLI/API)
