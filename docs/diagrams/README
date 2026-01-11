@@ -1,0 +1,584 @@
+# 📊 Additional System Diagrams for Paladin
+
+## 1. Detailed Data Flow Diagram
+
+```mermaid
+graph TB
+    subgraph "Request Flow"
+        A[User Query] --> B[API Gateway]
+        B --> C{Authenticated?}
+        C -->|No| D[Return 401]
+        C -->|Yes| E{Rate Limit OK?}
+        E -->|No| F[Return 429]
+        E -->|Yes| G[Forward to Planner]
+    end
+    
+    subgraph "Planning Phase"
+        G --> H{Cache Hit?}
+        H -->|Yes| I[Return Cached Plan]
+        H -->|No| J[Query RAG Store]
+        J --> K[Build Context]
+        K --> L{Primary LLM Available?}
+        L -->|Yes| M[Ollama Generate]
+        L -->|No| N[Fallback to OpenAI]
+        M --> O[Validate Plan]
+        N --> O
+        O --> P[Cache Result]
+        P --> Q[Return Plan]
+    end
+    
+    subgraph "Execution Phase"
+        Q --> R{Safety Check}
+        R -->|Fail| S[Reject - Log Audit]
+        R -->|Pass| T[Create Container]
+        T --> U[Execute Command]
+        U --> V{Timeout?}
+        V -->|Yes| W[Kill Container]
+        V -->|No| X[Collect Output]
+        W --> Y[Return Error]
+        X --> Z[Log Result]
+        Z --> AA[Return Output]
+    end
+    
+    subgraph "Presentation Phase"
+        AA --> AB[Format Output]
+        AB --> AC[Syntax Highlight]
+        AC --> AD{Long Output?}
+        AD -->|Yes| AE[Generate Summary]
+        AD -->|No| AF[Return As-Is]
+        AE --> AG[Return with Summary]
+    end
+    
+    style A fill:#8b5cf6
+    style M fill:#3b82f6
+    style T fill:#10b981
+    style AB fill:#f59e0b
+```
+
+## 2. Database Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    USERS ||--o{ COMMAND_HISTORY : executes
+    USERS ||--o{ API_KEYS : owns
+    USERS ||--o{ SESSIONS : has
+    USERS ||--o{ AUDIT_LOG : generates
+    COMMAND_HISTORY ||--o{ AUDIT_LOG : logs
+    SAFETY_POLICIES ||--o{ AUDIT_LOG : enforces
+    
+    USERS {
+        uuid id PK
+        varchar email UK
+        varchar password_hash
+        varchar role
+        int quota_commands_per_hour
+        timestamp created_at
+        timestamp last_login
+    }
+    
+    COMMAND_HISTORY {
+        uuid id PK
+        uuid user_id FK
+        text query
+        text planned_command
+        text reasoning
+        varchar execution_status
+        int exit_code
+        varchar output_hash
+        int execution_time_ms
+        timestamp created_at
+    }
+    
+    API_KEYS {
+        uuid id PK
+        uuid user_id FK
+        varchar key_hash
+        varchar name
+        timestamp expires_at
+        timestamp created_at
+    }
+    
+    SESSIONS {
+        uuid id PK
+        uuid user_id FK
+        varchar token_hash
+        timestamp expires_at
+        inet ip_address
+        text user_agent
+        timestamp created_at
+    }
+    
+    AUDIT_LOG {
+        uuid id PK
+        uuid user_id FK
+        varchar action
+        varchar resource
+        jsonb details
+        inet ip_address
+        timestamp timestamp
+    }
+    
+    SAFETY_POLICIES {
+        uuid id PK
+        varchar name
+        text rego_code
+        boolean enabled
+        int version
+        uuid created_by FK
+        timestamp created_at
+    }
+    
+    COMMAND_EMBEDDINGS {
+        uuid id PK
+        text command
+        text description
+        vector embedding
+        int usage_count
+        float success_rate
+        timestamp created_at
+    }
+```
+
+## 3. Deployment Architecture
+
+```mermaid
+graph TB
+    subgraph "Internet"
+        Users[Users]
+        CDN[CloudFlare CDN]
+    end
+    
+    subgraph "Load Balancer Tier"
+        LB1[Nginx LB Primary]
+        LB2[Nginx LB Backup]
+    end
+    
+    subgraph "Application Tier - Zone A"
+        GW1[API Gateway 1]
+        P1[Planner 1]
+        E1[Executor 1]
+        Pr1[Presenter 1]
+    end
+    
+    subgraph "Application Tier - Zone B"
+        GW2[API Gateway 2]
+        P2[Planner 2]
+        E2[Executor 2]
+        Pr2[Presenter 2]
+    end
+    
+    subgraph "AI/LLM Tier"
+        O1[Ollama GPU 1]
+        O2[Ollama GPU 2]
+        O3[Ollama GPU 3]
+    end
+    
+    subgraph "Cache Tier"
+        R1[Redis Master]
+        R2[Redis Replica 1]
+        R3[Redis Replica 2]
+    end
+    
+    subgraph "Database Tier"
+        PG1[PostgreSQL Primary]
+        PG2[PostgreSQL Sync Replica]
+        PG3[PostgreSQL Async Replica 1]
+        PG4[PostgreSQL Async Replica 2]
+    end
+    
+    subgraph "Monitoring"
+        Prom[Prometheus]
+        Graf[Grafana]
+        Jaeger[Jaeger]
+        ELK[ELK Stack]
+    end
+    
+    Users --> CDN
+    CDN --> LB1
+    CDN --> LB2
+    
+    LB1 --> GW1
+    LB1 --> GW2
+    LB2 --> GW1
+    LB2 --> GW2
+    
+    GW1 --> P1
+    GW1 --> E1
+    GW1 --> Pr1
+    GW2 --> P2
+    GW2 --> E2
+    GW2 --> Pr2
+    
+    P1 --> O1
+    P1 --> O2
+    P2 --> O2
+    P2 --> O3
+    
+    P1 --> R1
+    P2 --> R1
+    E1 --> R2
+    E2 --> R3
+    
+    P1 --> PG1
+    P2 --> PG1
+    E1 --> PG2
+    E2 --> PG3
+    
+    PG1 -.Sync Replication.-> PG2
+    PG1 -.Async Replication.-> PG3
+    PG1 -.Async Replication.-> PG4
+    
+    GW1 --> Prom
+    P1 --> Prom
+    E1 --> Prom
+    
+    Prom --> Graf
+    P1 --> Jaeger
+    All --> ELK
+```
+
+## 4. Security Architecture
+
+```mermaid
+graph TB
+    subgraph "Perimeter Defense"
+        WAF[WAF - DDoS Protection]
+        CF[CloudFlare]
+    end
+    
+    subgraph "Network Security"
+        FW[Firewall]
+        VPN[VPN Gateway]
+        IDS[Intrusion Detection]
+    end
+    
+    subgraph "Application Security"
+        GW[API Gateway]
+        Auth[Auth Service]
+        RateLimit[Rate Limiter]
+        InputVal[Input Validator]
+    end
+    
+    subgraph "Data Security"
+        Encrypt[Encryption at Rest]
+        TLS[TLS in Transit]
+        Secrets[Secret Management]
+    end
+    
+    subgraph "Runtime Security"
+        OPA[OPA Policy Engine]
+        Container[Container Isolation]
+        AppArmor[AppArmor Profiles]
+        Seccomp[Seccomp Filters]
+    end
+    
+    subgraph "Monitoring & Response"
+        SIEM[SIEM]
+        Audit[Audit Logging]
+        Alerts[Alert System]
+    end
+    
+    CF --> WAF
+    WAF --> FW
+    FW --> VPN
+    FW --> IDS
+    
+    IDS --> GW
+    GW --> Auth
+    Auth --> RateLimit
+    RateLimit --> InputVal
+    
+    InputVal --> OPA
+    OPA --> Container
+    Container --> AppArmor
+    Container --> Seccomp
+    
+    Container --> Encrypt
+    Container --> TLS
+    Auth --> Secrets
+    
+    All --> Audit
+    Audit --> SIEM
+    SIEM --> Alerts
+```
+
+## 5. Scaling Strategy Diagram
+
+```mermaid
+graph LR
+    subgraph "Stage 1: 1-100 Users"
+        S1_GW[1 Gateway]
+        S1_P[2 Planners]
+        S1_E[2 Executors]
+        S1_DB[1 Primary DB]
+    end
+    
+    subgraph "Stage 2: 100-1K Users"
+        S2_LB[Load Balancer]
+        S2_GW[3 Gateways]
+        S2_P[5 Planners]
+        S2_E[10 Executors]
+        S2_DB[1 Primary + 1 Replica]
+        S2_Redis[Redis Cluster]
+    end
+    
+    subgraph "Stage 3: 1K-10K Users"
+        S3_LB[Multi-Region LB]
+        S3_GW[10 Gateways]
+        S3_P[20 Planners]
+        S3_E[50 Executors]
+        S3_DB[1 Primary + 3 Replicas]
+        S3_Redis[6-Node Redis Cluster]
+        S3_CDN[CDN]
+    end
+    
+    subgraph "Stage 4: 10K+ Users"
+        S4_Global[Global Load Balancer]
+        S4_Multi[Multi-Region Deployment]
+        S4_Auto[Auto-Scaling Groups]
+        S4_Sharding[Database Sharding]
+        S4_Cache[Distributed Cache]
+    end
+    
+    S1_GW -.Scale Up.-> S2_LB
+    S2_LB -.Scale Up.-> S3_LB
+    S3_LB -.Scale Up.-> S4_Global
+```
+
+## 6. Failure Recovery Flow
+
+```mermaid
+graph TD
+    A[Service Failure Detected] --> B{Critical Service?}
+    
+    B -->|Yes| C[Trigger Immediate Failover]
+    B -->|No| D[Circuit Breaker Opens]
+    
+    C --> E{Replica Available?}
+    E -->|Yes| F[Promote Replica]
+    E -->|No| G[Start New Instance]
+    
+    D --> H[Route to Fallback]
+    H --> I{Fallback Succeeds?}
+    I -->|Yes| J[Continue with Degraded Service]
+    I -->|No| K[Return Cached Response]
+    
+    F --> L[Update DNS/Service Registry]
+    G --> L
+    
+    L --> M[Monitor New Primary]
+    M --> N{Stable for 5 min?}
+    N -->|Yes| O[Close Circuit Breaker]
+    N -->|No| P[Trigger Alert]
+    
+    J --> Q{Primary Recovered?}
+    Q -->|Yes| R[Gradually Shift Traffic]
+    Q -->|No| Q
+    
+    K --> S[Alert Operations Team]
+    S --> T[Manual Intervention]
+    
+    O --> U[Normal Operations]
+    R --> U
+```
+
+## 7. CI/CD Pipeline
+
+```mermaid
+graph LR
+    A[Git Push] --> B[GitHub Actions Trigger]
+    
+    B --> C[Run Linters]
+    C --> D[Run Unit Tests]
+    D --> E[Run Integration Tests]
+    
+    E --> F{Tests Pass?}
+    F -->|No| G[Notify Developer]
+    F -->|Yes| H[Build Docker Images]
+    
+    H --> I[Security Scan]
+    I --> J{Vulnerabilities?}
+    J -->|Critical| G
+    J -->|None/Low| K[Push to Registry]
+    
+    K --> L{Branch?}
+    L -->|main| M[Deploy to Staging]
+    L -->|feature| N[Deploy to Dev]
+    
+    M --> O[Run E2E Tests]
+    O --> P{Tests Pass?}
+    P -->|No| Q[Rollback]
+    P -->|Yes| R[Manual Approval]
+    
+    R --> S[Deploy to Production]
+    S --> T[Blue-Green Deployment]
+    T --> U[Monitor Metrics]
+    U --> V{Metrics OK?}
+    V -->|No| W[Automatic Rollback]
+    V -->|Yes| X[Complete Deployment]
+```
+
+## 8. Cost Optimization Strategy
+
+```mermaid
+graph TB
+    subgraph "Cost Monitoring"
+        A[Track Resource Usage]
+        B[Monitor LLM API Costs]
+        C[Database Query Analysis]
+    end
+    
+    subgraph "Optimization Strategies"
+        D[Cache Aggressive]
+        E[Use Smaller Models]
+        F[Database Query Optimization]
+        G[Auto-Scaling Rules]
+        H[Spot Instances]
+    end
+    
+    subgraph "Cost Allocation"
+        I[Per-User Tracking]
+        J[Service-Level Budgets]
+        K[Alert on Threshold]
+    end
+    
+    A --> D
+    A --> G
+    A --> H
+    B --> D
+    B --> E
+    C --> F
+    
+    D --> I
+    G --> J
+    K --> L[Budget Report]
+```
+
+## 9. User Journey Map
+
+```mermaid
+journey
+    title User Interaction with Paladin
+    section Discovery
+      Visit Website: 5: User
+      Read Documentation: 4: User
+      Watch Demo Video: 5: User
+    section Onboarding
+      Sign Up: 5: User
+      Verify Email: 3: User, System
+      Complete Profile: 4: User
+    section First Use
+      Input First Command: 5: User
+      See Planning Phase: 4: User, System
+      Approve Execution: 4: User
+      View Results: 5: User, System
+    section Regular Use
+      Use Command Templates: 5: User
+      Check History: 4: User
+      Export Results: 4: User
+    section Advanced Use
+      Create Workflows: 5: User
+      Set Safety Policies: 4: User
+      Integrate via API: 5: User, Developer
+```
+
+## 10. Technology Stack Overview
+
+```mermaid
+mindmap
+  root((Paladin Tech Stack))
+    Frontend
+      React
+      TypeScript
+      TailwindCSS
+      React Query
+      WebSocket
+    Backend
+      Python
+        FastAPI
+        LangGraph
+        Pydantic
+      Go
+        Gin Framework
+    AI/ML
+      Ollama
+      OpenAI API
+      LangChain
+      pgvector
+    Data
+      PostgreSQL
+      Redis
+      S3/MinIO
+    Infrastructure
+      Docker
+      Kubernetes
+      Nginx
+    Security
+      OPA
+      JWT
+      OAuth2
+    Monitoring
+      Prometheus
+      Grafana
+      Jaeger
+      ELK Stack
+```
+
+---
+
+## 📋 Diagram Usage Guide
+
+### For Presentations:
+1. **High-Level Architecture** - Use Diagram 1 for overall system overview
+2. **Data Flow** - Use Diagram 1 to show request processing
+3. **Database Design** - Use Diagram 2 for data modeling discussion
+4. **Scaling** - Use Diagram 3 + Diagram 5 for growth strategy
+
+### For Documentation:
+- Embed all diagrams in `/docs/architecture/` folder
+- Export as SVG using Mermaid CLI: `mmdc -i diagram.mmd -o diagram.svg`
+- Include in GitHub Wiki for easy reference
+
+### For Demos:
+- Show Diagram 4 (Security) when discussing safety features
+- Show Diagram 7 (CI/CD) when discussing development workflow
+- Show Diagram 9 (User Journey) when explaining user experience
+
+---
+
+## 🔧 Mermaid CLI Commands
+
+```bash
+# Install Mermaid CLI
+npm install -g @mermaid-js/mermaid-cli
+
+# Convert single diagram to SVG
+mmdc -i architecture.mmd -o architecture.svg
+
+# Convert all diagrams in a folder
+for file in diagrams/*.mmd; do
+  mmdc -i "$file" -o "${file%.mmd}.svg"
+done
+
+# Generate PNG for presentations
+mmdc -i architecture.mmd -o architecture.png -w 1920 -H 1080
+
+# Generate with custom theme
+mmdc -i architecture.mmd -o architecture.svg -t dark
+```
+
+---
+
+## 📊 Diagram Export Formats
+
+| Format | Use Case | Command |
+|--------|----------|---------|
+| **SVG** | Documentation, Web | `mmdc -i file.mmd -o file.svg` |
+| **PNG** | Presentations, Reports | `mmdc -i file.mmd -o file.png` |
+| **PDF** | Print, Formal Docs | `mmdc -i file.mmd -o file.pdf` |
+
+---
+
+**Created:** January 11, 2026  
+**For:** Paladin System Documentation  
+**Team:** Nakul, Mann, Kavish, Vihaan
