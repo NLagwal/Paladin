@@ -109,7 +109,7 @@ graph LR
 
 ---
 
-<<<<<<< HEAD
+
 ## Execution Modes
 
 Paladin supports two execution modes:
