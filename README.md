@@ -8,9 +8,6 @@
   <img src="https://img.shields.io/badge/GitHub-Repository-black? style=flat-square&logo=github" alt="GitHub">
 </a>
 <a href="#">
-  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License">
-</a>
-<a href="#">
   <img src="https://img.shields.io/badge/Version-0.0.1-blue?style=flat-square" alt="Version">
 </a>
 <a href="#">
@@ -340,7 +337,6 @@ Paladin/
 │
 ├── docker-compose.yml          # Local development
 ├── README.md                   # This file
-└── LICENSE                     # MIT License
 ```
 
 ---
@@ -781,12 +777,6 @@ Found a bug? [Create an issue](https://github.com/NLagwal/Paladin/issues) with:
 - **Mann Upadhyay** — Frontend & Integration
 - **Kavish Bansal** — Backend Services & Monitoring
 - **Vihaan Sharma** — Database Schema & DevOps
-
----
-
-## 📄 License
-
-This project is licensed under the **MIT License** - see [LICENSE](LICENSE) file for details.
 
 ---
 
