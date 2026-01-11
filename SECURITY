@@ -1,0 +1,25 @@
+# Security Policy
+
+## Responsible Disclosure
+
+If you discover a security vulnerability, please email LMannUpadhyay@gmail.com instead of using the issue tracker.
+
+## Security Features
+
+### Stable Mode (Recommended for Production)
+- Allowlist-based command validation
+- No arbitrary command execution
+- Safe for untrusted input
+
+### Experimental Mode (Development Only)
+- ⚠️ Unsafe for untrusted input
+- Full shell access
+- Should never be used in production
+
+## Security Considerations
+
+- Always run in isolated environments
+- Use HTTPS in production
+- Implement proper authentication
+- Monitor audit logs
+- Keep dependencies updated
