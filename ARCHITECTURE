@@ -1,0 +1,51 @@
+# Paladin Architecture
+
+## System Layers
+
+### 1. Interface Layer
+- **CLI**: Rich terminal interface using Typer + Rich
+- **Web UI**: React 18.x with TypeScript
+- **API Gateway**: Go-based request routing
+
+### 2. Orchestration Layer  
+- **Agent**: Coordinates Planner → Executor → Presenter
+- **Graph**: LangChain-based execution graph
+
+### 3. Reasoning Layer
+- **Planner**:  Uses LLM (Ollama/OpenAI) to translate natural language to shell commands
+- **Prompts**: Few-shot examples for accuracy
+- **RAG System**: Command documentation retrieval
+
+### 4. Execution Layer
+- **Executor**:  Subprocess-based command execution
+- **Safety Checks**: Pre-execution validation
+- **Timeout Protection**: 15s default timeout
+
+### 5. Safety Layer
+- **Allowlist**:  Whitelisted commands in Stable mode
+- **Sandbox**: Container isolation via Docker
+- **Error Containment**: Exceptions caught & logged
+
+### 6. Presentation Layer
+- **Formatter**: Raw output → human-readable format
+- **Summary Generation**: LLM-based output summarization
+
+## Data Flow
+
+1. User Input → Validation
+2. Planner → Generate Command
+3. Safety Check → Allowlist Validation
+4. Executor → Run in Sandbox
+5. Presenter → Format Output
+6. Response → Display to User
+
+## Technology Matrix
+
+| Layer | Technology | Language |
+|-------|-----------|----------|
+| Frontend | React + Vite | TypeScript |
+| API Gateway | Gin | Go |
+| AI Engine | LangChain | Python |
+| Auth | JWT + PostgreSQL | Node.js |
+| Monitoring | Prometheus | - |
+| Container | Docker + K8s | - |
