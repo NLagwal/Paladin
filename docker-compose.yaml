@@ -44,7 +44,8 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:5000/api
+      - VITE_API_URL=http://api_gateway:5000/api
+      - API_GATEWAY_URL=http://api_gateway:5000
       - API_GATEWAY_URL=http://api_gateway:5000
     networks:
       - paladin_network
