@@ -68,46 +68,80 @@ export function ChatInterface({ seedMessages }: ChatInterfaceProps) {
     setInput("");
     setIsLoading(true); // Set loading to true
 
+    // Check for Demo Mode
+    const isDemo = import.meta.env.VITE_DEMO_MODE === 'true';
+
     try {
-      console.log('Sending request to:', AI_API_URL);
-      console.log('Environment VITE_API_URL:', import.meta.env.VITE_API_URL);
+      if (isDemo) {
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const response = await axios.post(AI_API_URL, { message: value }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        timeout: 120000, // 120 second timeout (AI processing can take time)
-        withCredentials: false, // Don't send credentials for CORS
-      });
-      const aiResponse = response.data;
+        let demoResponse = {
+          message: "Demo Mode: Command simulated successfully.",
+          command: "",
+          raw_output: ""
+        };
 
-      const assistantMessage: ChatMessage = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: aiResponse.message || "Command executed successfully.",
-        command: aiResponse.command,
-        raw_output: aiResponse.raw_output,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
+        const lowerVal = value.toLowerCase();
+        if (lowerVal.includes("list files") || lowerVal.includes("ls")) {
+          demoResponse = {
+            message: "Here are the files in the current directory.",
+            command: "ls -la",
+            raw_output: "drwxr-xr-x  5 user group 4096 Jan 11 10:00 .\ndrwxr-xr-x 10 user group 4096 Jan 11 09:30 ..\n-rw-r--r--  1 user group  120 Jan 11 10:00 config.toml\n-rwxr-xr-x  1 user group 2048 Jan 10 14:00 main.py"
+          };
+        } else if (lowerVal.includes("disk") || lowerVal.includes("space") || lowerVal.includes("df")) {
+          demoResponse = {
+            message: "Disk usage check complete.",
+            command: "df -h",
+            raw_output: "Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda1       100G   45G   55G  45% /\ntmpfs            16G  4.0K   16G   1% /tmp"
+          };
+        } else if (lowerVal.includes("system") || lowerVal.includes("info") || lowerVal.includes("fastfetch")) {
+          demoResponse = {
+            message: "System information retrieved.",
+            command: "fastfetch --pipe",
+            raw_output: "OS: Paladin Linux x86_64\nKernel: 6.8.0-generic\nUptime: 2 hours, 14 mins\nCPU: AMD Ryzen 9 5950X (32) @ 3.4GHz\nMemory: 4.2 GiB / 32.0 GiB (13%)"
+          };
+        }
+
+        const assistantMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: demoResponse.message,
+          command: demoResponse.command,
+          raw_output: demoResponse.raw_output,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+
+      } else {
+        // Real API Call
+        console.log('Sending request to:', AI_API_URL);
+        const response = await axios.post(AI_API_URL, { message: value }, {
+          headers: { 'Content-Type': 'application/json' },
+          timeout: 120000,
+          withCredentials: false,
+        });
+        const aiResponse = response.data;
+
+        const assistantMessage: ChatMessage = {
+          id: crypto.randomUUID(),
+          role: "assistant",
+          content: aiResponse.message || "Command executed successfully.",
+          command: aiResponse.command,
+          raw_output: aiResponse.raw_output,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
 
     } catch (error: any) {
       console.error("Error communicating with AI service:", error);
-      console.error("Request URL:", AI_API_URL);
-      console.error("Error details:", {
-        message: error.message,
-        code: error.code,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
 
       let errorMsg = "Error: Unable to get a response from the AI service.";
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
         errorMsg = "Network Error: Could not connect to the API. Please ensure the API Gateway is running on port 5000.";
       } else if (error.response?.status === 503) {
         errorMsg = "Service Unavailable: The AI service is temporarily unavailable. Please try again later.";
-      } else if (error.response?.data?.message) {
-        errorMsg = error.response.data.message;
       } else if (error.message) {
         errorMsg = `Error: ${error.message}`;
       }

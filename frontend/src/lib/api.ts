@@ -32,12 +32,21 @@ export interface AppConfig {
     ollama_base_url?: string;
 }
 
+// Demo start time
+const DEMO_START_TIME = Date.now();
+const formatUptime = () => {
+    const diff = Math.floor((Date.now() - DEMO_START_TIME) / 1000);
+    const h = Math.floor(diff / 3600);
+    const m = Math.floor((diff % 3600) / 60);
+    return `${h}h ${m}m ${diff % 60}s`;
+};
+
 export const api = {
     async getAiStatus(): Promise<AiStatus> {
         if (IS_DEMO) {
             return {
                 status: 'ONLINE',
-                uptime: '1h 23m',
+                uptime: formatUptime(),
                 model: 'demo-model-v1',
                 mode: 'stable'
             };
