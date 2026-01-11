@@ -15,6 +15,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 
 export function SettingsModal() {
+    const [open, setOpen] = useState(false);
+    const [config, setConfig] = useState<AppConfig | null>(null);
+    const [loading, setLoading] = useState(false);
+    const { toast } = useToast();
     const [ollamaModels, setOllamaModels] = useState<string[]>([]);
 
     useEffect(() => {
