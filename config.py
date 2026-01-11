@@ -15,6 +15,8 @@ class AppConfig(BaseModel):
         pattern="^(stable|experimental)$",
         description="Execution mode"
     )
+    allowed_commands: Optional[list[str]] = Field(default_factory=list, description="List of allowed commands in stable mode")
+    tools: Optional[list[str]] = Field(default_factory=list, description="List of enabled tools")
 
     class Config:
         extra = "forbid"

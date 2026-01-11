@@ -50,6 +50,7 @@ def start():
 
         state = {
             "current_task": user_input,
+            "scratchpad": "",
             "command": "",
             "output": "",
             "step_count": 0,

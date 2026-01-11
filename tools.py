@@ -1,8 +1,33 @@
 import subprocess
 import shlex
+import urllib.request
+import urllib.parse
 from config import load_config
 
 CONFIG = load_config()
+
+# -------------------------------------------------
+# Interactive commands blacklist
+# -------------------------------------------------
+INTERACTIVE_COMMANDS = {
+    "vim", "vi", "nvim", "nano", "emacs",
+    "top", "htop", "btop", "nvtop",
+    "less", "more", "man",
+    "ssh", "ftp", "telnet",
+    "tmux", "screen",
+    "watch", 
+}
+
+def _is_interactive(command: str) -> bool:
+    try:
+        argv = shlex.split(command)
+    except ValueError:
+        return True # Safe default
+    
+    if not argv:
+        return False
+        
+    return argv[0] in INTERACTIVE_COMMANDS
 
 # -------------------------------------------------
 # Stable-mode allowlist (known, read-only commands)
@@ -54,10 +79,10 @@ def _is_allowed(command: str) -> bool:
     Stable:
       - Only known, read-only commands
     Experimental:
-      - Anything goes (freeroam)
+      - Anything goes EXCEPT interactive commands
     """
     if CONFIG.mode == "experimental":
-        return True
+        return not _is_interactive(command)
 
     try:
         argv = shlex.split(command)
@@ -68,6 +93,11 @@ def _is_allowed(command: str) -> bool:
         return False
 
     base_cmd = argv[0]
+    
+    # Check config override first
+    if CONFIG.allowed_commands:
+        return base_cmd in CONFIG.allowed_commands
+        
     return base_cmd in STABLE_ALLOWLIST
 
 
@@ -111,3 +141,12 @@ def run_shell_command(command: str) -> str:
         return "[ERROR] Command timed out"
     except Exception as e:
         return f"[ERROR] {type(e).__name__}: {str(e)}"
+
+def search_web(query: str) -> str:
+    """
+    Basic web search tool (Mock/Placeholder or simple naive implementation).
+    """
+    # This is a placeholder. In a real scenario, you'd use a search API.
+    # We can simulate it or just return a message if not configured.
+    return f"[INFO] Searching the web for: {query}\n(Note: Real web search requires an API key configuration. This is a placeholder.)"
+

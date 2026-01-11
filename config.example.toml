@@ -6,6 +6,12 @@ temperature = 0.2
 timeout_seconds = 15
 mode = "stable"
 
+# Optional: Override allowed commands in stable mode
+# allowed_commands = ["fastfetch", "ls", "date"]
+
+# Optional: Enable/Disable specific tools
+# tools = ["run_shell_command", "search_web"]
+
 # Example for Ollama
 # provider = "ollama"
 # model = "llama3:8b"

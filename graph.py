@@ -11,6 +11,7 @@ MAX_STEPS = 5
 
 class AgentState(TypedDict):
     current_task: str
+    scratchpad: str
     command: str
     output: str
     step_count: int
@@ -21,19 +22,41 @@ def strip_think(text: str) -> str:
     return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
 
 
+def extract_think(text: str) -> tuple[str, str]:
+    """
+    Extracts content inside <think> tags and the remaining text.
+    Returns (thought, remaining_text).
+    """
+    match = re.search(r"<think>(.*?)</think>", text, flags=re.DOTALL)
+    if match:
+        thought = match.group(1).strip()
+        remaining = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+        return thought, remaining
+    return "", text.strip()
+
+
 def planner_node(state: AgentState) -> dict:
     """
     Planner extracts a single shell command from user input.
     Returns the command as a plain string.
     """
     response = (PLANNER_PROMPT | LLM).invoke({
-        "current_task": state["current_task"]
+        "current_task": state["current_task"],
+        "scratchpad": state.get("scratchpad", "")
     })
     
-    command = strip_think(response.content).strip()
+    thought, command = extract_think(response.content)
+    
+    # Update scratchpad if there's new thought
+    new_scratchpad = state.get("scratchpad", "")
+    if thought:
+        if new_scratchpad:
+            new_scratchpad += "\n\n"
+        new_scratchpad += f"Step {state['step_count'] + 1}: {thought}"
     
     return {
         "command": command,
+        "scratchpad": new_scratchpad,
         "step_count": state["step_count"] + 1
     }
 
