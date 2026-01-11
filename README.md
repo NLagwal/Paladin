@@ -1,38 +1,28 @@
 # 🛡️ Paladin
 
-**Paladin** is a reasoning-driven command execution assistant designed to bridge natural language intent and controlled system interaction.
-
-> 🚧 **Work In Progress** 🚧
-
-![Paladin Frontend WIP](assets/wip.png)
-
-## 📖 Overview
-
-At its core, Paladin translates user requests into **explicit, auditable shell commands**, executes them in a constrained environment, and presents the results in a structured, human-readable form.
-
-**Paladin Prioritizes:**
-- **Explicit Intent** over autonomy.
-- **Safety Boundaries** over unrestricted execution.
-- **Clear Separation** between reasoning, execution, and presentation.
+**Paladin** is a reasoning-driven command execution assistant designed to bridge natural language intent and controlled system interaction. It features a modern, "premium" web interface and a robust AI agent backend.
 
 ## ✨ Features
 
 - **Linear Execution Pipeline:** User Input → Planner → Executor → Presenter.
+- **Smart "AI Triage":** Suggests optimizations and fixes based on system analysis.
 - **Dual Execution Modes:**
     - **Stable:** Executes only known, whitelisted commands (Safe).
     - **Experimental:** Allows unrestricted shell command execution (Beta/Unsafe).
-- **Interface Support:**
-    - **CLI:** Rich, interactive command-line interface.
-    - **Web UI:** Full-stack React dashboard with microservices architecture.
+- **Interactive Web Console:**
+    - **Command Console:** Terminal-like chat interface with code block highlighting.
+    - **Live Telemetry:** Real-time uptime and system status.
+    - **Dynamic Settings:** Switch models (Ollama/Gemini) and modes instantly.
+- **Demo Mode:** Fully simulated environment for testing UI without a backend.
 
 ## 🏗️ Project Structure
 
 The project is organized into the following components:
 
-- **`ai/`**: The core Python agent logic (LLM interaction, graph, tools).
-- **`frontend/`**: React-based Web UI.
-- **`services/`**: Backend microservices (Auth, Notification, PDF Hosting).
-- **`api-gateway/`**: Gateway routing requests to services.
+- **`ai/`**: The core Python agent logic (FastAPI, LangGraph, Tools).
+- **`frontend/`**: React/Vite Web UI with TailwindCSS & Shadcn/UI.
+- **`api-gateway/`**: Node.js/Express Gateway routing requests.
+- **`services/`**: Additional backend microservices.
 
 ## 🚀 Getting Started
 
@@ -40,52 +30,49 @@ The project is organized into the following components:
 
 - [Docker & Docker Compose](https://www.docker.com/) (Recommended for full stack)
 - Python 3.11+ (For standalone agent)
-- [Ollama](https://ollama.com/) (or compatible LLM provider)
+- [Ollama](https://ollama.com/) (Recommended for local LLM privacy)
 
-### Method 1: Full-Stack Web App (Recommended)
+### Quick Start (Full Stack)
 
-Then open **http://localhost:3000/** in your browser.
+We provide convenience scripts to get you running instantly.
 
-### Method 2: Standalone AI Agent (CLI/API)
+#### 1. Normal Mode (Requires Backend)
+Starts the AI Agent, API Gateway, and Web UI.
 
-If you only want to run the core AI agent:
+```bash
+./start.sh
+```
+Then open **http://localhost:5173/** in your browser.
 
-#### 1. Setup
+#### 2. Demo Mode (UI Only)
+Starts only the Frontend with simulated AI responses. Perfect for checking out the UI.
+
+```bash
+./start-demo.sh
+```
+Then open **http://localhost:5173/** in your browser.
+
+### Manual Setup (Standalone Agent)
+
+If you only want to run the core AI agent CLI:
 
 ```bash
 cd ai
-
-# Create venv
 python -m venv venv
 source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Configure
 cp config.example.toml config.toml
-# Edit config.toml to set your LLM provider options
-```
-
-#### 2. Run CLI
-
-```bash
 python cli.py
 ```
 
-#### 3. Run API Server
+## ⚙️ Configuration
 
-```bash
-uvicorn server:app --host 0.0.0.0 --port 8000
-```
-*⚠️ Warning: Paladin executes real system commands. Do not expose the server to untrusted networks.*
-
-## ⚙️ Configuration (`ai/config.toml`)
+Configuration is managed via the Web UI (Settings) or `ai/config.toml`.
 
 | Setting | Description | Default |
 | :--- | :--- | :--- |
-| `provider` | The LLM provider (e.g., `ollama`). | `ollama` |
-| `model` | Specific model to use (e.g., `ministral-3:3b`). | `ministral-3:3b` |
+| `provider` | The LLM provider (`ollama` or `gemini`). | `ollama` |
+| `model` | Specific model to use (auto-detected for Ollama). | `ministral-3:3b` |
 | `temperature` | Creativity of the model (0.0 - 1.0). | `0.2` |
 | `timeout_seconds` | Max duration for command execution. | `15` |
 | `mode` | `stable` (allowlist) or `experimental` (unrestricted). | `stable` |
@@ -103,17 +90,7 @@ graph LR
 - **Executor**: Executes the command under configured safety constraints.
 - **Presenter**: Formats and summarizes the output for user consumption.
 
-## Execution Modes
-
-### Stable Mode (Default)
-- Executes only known, whitelisted commands (defined in `tools.py`).
-- Intended for web exposure and shared environments.
-
-### Experimental Mode (Beta)
-- Allows unrestricted shell command execution (except blacklisted interactive commands like `vim`, `top`).
-- Intended for local experimentation only.
-
-> ⚠️ Experimental mode is **unsafe for untrusted input**.
+> ⚠️ **Security Warning**: Experimental mode allows real shell execution. Do not expose this service to untrusted networks.
 
 ---
 
