@@ -1,5 +1,14 @@
-provider = "ollama"
-model = "ministral-3:3b"
-temperature = 0.2 #bw 0 to 1
+# Default (Gemini)
+provider = "gemini"
+model = "gemini-2.5-flash"
+api_key = "YOUR_GEMINI_API_KEY"
+temperature = 0.2
 timeout_seconds = 15
-mode = "stable" #stable or experimental
+mode = "stable"
+
+# Example for Ollama
+# provider = "ollama"
+# model = "llama3:8b"
+# temperature = 0.2
+# timeout_seconds = 15
+# mode = "stable"

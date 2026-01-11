@@ -1,9 +1,11 @@
+from typing import Optional
 from pydantic import BaseModel, Field, ValidationError
 import tomllib
 import sys
 
 class AppConfig(BaseModel):
     provider: str = Field(..., description="LLM provider name")
+    api_key: Optional[str] = Field(None, description="API Key for cloud providers")
     model: str = Field(..., description="Model identifier")
     temperature: float = Field(..., ge=0.0, le=1.0)
     timeout_seconds: int = Field(..., gt=0)
@@ -13,6 +15,8 @@ class AppConfig(BaseModel):
         pattern="^(stable|experimental)$",
         description="Execution mode"
     )
+    allowed_commands: Optional[list[str]] = Field(default_factory=list, description="List of allowed commands in stable mode")
+    tools: Optional[list[str]] = Field(default_factory=list, description="List of enabled tools")
 
     class Config:
         extra = "forbid"
