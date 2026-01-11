@@ -4,8 +4,6 @@ import urllib.request
 import urllib.parse
 from config import load_config
 
-CONFIG = load_config()
-
 # -------------------------------------------------
 # Interactive commands blacklist
 # -------------------------------------------------
@@ -81,7 +79,9 @@ def _is_allowed(command: str) -> bool:
     Experimental:
       - Anything goes EXCEPT interactive commands
     """
-    if CONFIG.mode == "experimental":
+    cfg = load_config()
+    
+    if cfg.mode == "experimental":
         return not _is_interactive(command)
 
     try:
@@ -95,8 +95,8 @@ def _is_allowed(command: str) -> bool:
     base_cmd = argv[0]
     
     # Check config override first
-    if CONFIG.allowed_commands:
-        return base_cmd in CONFIG.allowed_commands
+    if cfg.allowed_commands:
+        return base_cmd in cfg.allowed_commands
         
     return base_cmd in STABLE_ALLOWLIST
 
@@ -113,6 +113,9 @@ def run_shell_command(command: str) -> str:
             "[DENIED] Command not allowed in STABLE mode\n"
             "Enable experimental mode to allow unrestricted execution."
         )
+    
+    # Load config for timeout
+    cfg = load_config()
 
     try:
         process = subprocess.run(
@@ -122,7 +125,7 @@ def run_shell_command(command: str) -> str:
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            timeout=CONFIG.timeout_seconds,
+            timeout=cfg.timeout_seconds,
         )
 
         stdout = process.stdout.strip()
