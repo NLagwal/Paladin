@@ -8,7 +8,7 @@
 
 ## 📖 Overview
 
-At its core, Paladin translates user requests into **explicit, auditable shell commands**, executes them in a constrained environment, and presents the results in a structured, human-readable form. The system is intentionally synchronous, transparent, and deterministic by default.
+At its core, Paladin translates user requests into **explicit, auditable shell commands**, executes them in a constrained environment, and presents the results in a structured, human-readable form.
 
 **Paladin Prioritizes:**
 - **Explicit Intent** over autonomy.
@@ -23,57 +23,75 @@ At its core, Paladin translates user requests into **explicit, auditable shell c
     - **Experimental:** Allows unrestricted shell command execution (Beta/Unsafe).
 - **Interface Support:**
     - **CLI:** Rich, interactive command-line interface.
-    - **API Server:** FastAPI-based backend for web UI integration.
+    - **Web UI:** Full-stack React dashboard with microservices architecture.
+
+## 🏗️ Project Structure
+
+The project is organized into the following components:
+
+- **`ai/`**: The core Python agent logic (LLM interaction, graph, tools).
+- **`frontend/`**: React-based Web UI.
+- **`services/`**: Backend microservices (Auth, Notification, PDF Hosting).
+- **`api-gateway/`**: Gateway routing requests to services.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Python 3.11+
+
+- [Docker & Docker Compose](https://www.docker.com/) (Recommended for full stack)
+- Python 3.11+ (For standalone agent)
 - [Ollama](https://ollama.com/) (or compatible LLM provider)
 
-### Installation
+### Method 1: Full-Stack Web App (Recommended)
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/yourusername/paladin.git
-    cd paladin
-    ```
+Run the entire suite (Frontend + AI + Services) using Docker Compose.
 
-2.  **Set up a virtual environment:**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # On Windows: venv\Scripts\activate
-    ```
+```bash
+# Build and start all services
+docker-compose build --no-cache
+docker-compose up
 
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+# Make sure you have the model pulled in Ollama (if running via docker-compose ollama service)
+docker-compose exec ollama ollama run ministral-3:3b 
+```
 
-4.  **Configure the application:**
-    ```bash
-    cp config.example.toml config.toml
-    ```
-    *Edit `config.toml` to set your LLM provider, model, and safety mode.*
+Then open **http://localhost:3000/** in your browser.
 
-## 🛠️ Usage
+### Method 2: Standalone AI Agent (CLI/API)
 
-### CLI Mode
-Run the interactive command-line agent:
+If you only want to run the core AI agent:
+
+#### 1. Setup
+
+```bash
+cd ai
+
+# Create venv
+python -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure
+cp config.example.toml config.toml
+# Edit config.toml to set your LLM provider options
+```
+
+#### 2. Run CLI
+
 ```bash
 python cli.py
 ```
 
-### Server Mode
-Start the API server (useful for WebUI integration):
+#### 3. Run API Server
+
 ```bash
 uvicorn server:app --host 0.0.0.0 --port 8000
 ```
 *⚠️ Warning: Paladin executes real system commands. Do not expose the server to untrusted networks.*
 
-## ⚙️ Configuration
-
-The `config.toml` file controls the behavior of Paladin:
+## ⚙️ Configuration (`ai/config.toml`)
 
 | Setting | Description | Default |
 | :--- | :--- | :--- |
@@ -84,8 +102,6 @@ The `config.toml` file controls the behavior of Paladin:
 | `mode` | `stable` (allowlist) or `experimental` (unrestricted). | `stable` |
 
 ## 🏗️ Architecture
-
-Paladin follows a simple, linear pipeline:
 
 ```mermaid
 graph LR
@@ -98,83 +114,17 @@ graph LR
 - **Executor**: Executes the command under configured safety constraints.
 - **Presenter**: Formats and summarizes the output for user consumption.
 
-## 📝 Todo List
-
-- [ ] Implement robust allowlist for Stable mode.
-- [ ] Add Docker support for sandboxed execution.
-- [ ] Develop a full Web UI (Frontend).
-- [ ] Add session history support (optional).
-- [ ] Improve error handling and recovery strategies.
-- [ ] Add unit and integration tests.
-
----
-
-
 ## Execution Modes
 
-Paladin supports two execution modes:
-
 ### Stable Mode (Default)
-- Executes only known, whitelisted commands
-- Intended for web exposure and shared environments
-- Prevents arbitrary command execution
+- Executes only known, whitelisted commands (defined in `tools.py`).
+- Intended for web exposure and shared environments.
 
 ### Experimental Mode (Beta)
-- Allows unrestricted shell command execution
-- Intended for local experimentation only
-- Disabled by default
+- Allows unrestricted shell command execution (except blacklisted interactive commands like `vim`, `top`).
+- Intended for local experimentation only.
 
-⚠️ Experimental mode is **unsafe for untrusted input**.
-
----
-
-## What Paladin Is Not
-
-Paladin is **not**:
-- A general-purpose shell replacement
-- An autonomous agent
-- A penetration testing framework
-- A background daemon
-- A self-improving system
-
-Every action is derived from **explicit user input** and executed synchronously.
-
----
-
-## Setup and Configuration
-
-Requirements: Python 3.11+
-
-Create and activate a virtual environment:
-
-python -m venv venv
-source venv/bin/activate
-
-Install dependencies:
-
-pip install -r requirements.txt
-
-Copy the example configuration and edit as needed:
-
-cp config.example.toml config.toml
-
-Configuration controls:
-
-- LLM provider and model parameters  
-- Command execution timeout  
-- Safety mode  
-  - stable — allowlisted commands only  
-  - experimental — unrestricted command execution (beta)
-
-## Running Paladin 
-
-#### GUI mode:
-```
-docker-compose build --no-cache
-docker-compose up
-docker-compose exec ollama ollama run ministral-3:3b 
-```
-Then open http://localhost:3000/ on your prefered browser
+> ⚠️ Experimental mode is **unsafe for untrusted input**.
 
 ---
 
