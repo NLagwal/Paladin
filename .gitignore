@@ -15,4 +15,4 @@ config.toml
 
 docs
 
-target
+target/
