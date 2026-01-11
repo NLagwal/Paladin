@@ -5,7 +5,6 @@ from prompts import PLANNER_PROMPT, PRESENTER_PROMPT
 from tools import run_shell_command
 import re
 
-LLM = get_llm()
 MAX_STEPS = 5
 
 
@@ -40,7 +39,9 @@ def planner_node(state: AgentState) -> dict:
     Planner extracts a single shell command from user input.
     Returns the command as a plain string.
     """
-    response = (PLANNER_PROMPT | LLM).invoke({
+    # Instantiate LLM dynamically to support config changes at runtime
+    llm = get_llm()
+    response = (PLANNER_PROMPT | llm).invoke({
         "current_task": state["current_task"],
         "scratchpad": state.get("scratchpad", "")
     })
@@ -83,7 +84,9 @@ def presenter_node(state: AgentState) -> dict:
     """
     Presenter formats the output for display.
     """
-    response = (PRESENTER_PROMPT | LLM).invoke({
+    # Instantiate LLM dynamically to support config changes at runtime
+    llm = get_llm()
+    response = (PRESENTER_PROMPT | llm).invoke({
         "command": state["command"],
         "output": state["output"]
     })
