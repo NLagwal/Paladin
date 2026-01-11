@@ -19,6 +19,7 @@ fi
 # Set Demo Mode flag
 export VITE_DEMO_MODE="true"
 export VITE_API_URL="http://localhost:5000/api" # Fallback, ignored by mocks
+export API_GATEWAY_URL="http://localhost:5000" # For Vite Proxy fallback
 
 echo "Starting Frontend (Vite)..."
 npm run dev -- --port 5173 

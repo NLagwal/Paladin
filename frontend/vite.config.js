@@ -18,7 +18,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         // In Docker, use service name; locally, use localhost
-        target: process.env.API_GATEWAY_URL || 'http://api_gateway:5000',
+        target: process.env.API_GATEWAY_URL || 'http://localhost:5000',
         changeOrigin: true,
         secure: false,
         ws: true,

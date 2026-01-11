@@ -47,6 +47,7 @@ npm install
 export AI_SERVICE_URL="http://localhost:8000"
 export OLLAMA_BASE_URL="http://127.0.0.1:11434"
 export PORT=5000
+export API_GATEWAY_URL="http://localhost:5000" # For Vite Proxy
 node src/index.js &
 GATEWAY_PID=$!
 cd ..
